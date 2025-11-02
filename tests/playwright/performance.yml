@@ -1,0 +1,20 @@
+config:
+  target: "https://parabank.parasoft.com"      # replace with your base URL
+  phases:
+    - duration: 60                   # run for 60 seconds
+      arrivalRate: 1                 # 1 request per second
+      name: "Safe micro-benchmark"
+  ensure:
+    p95: 800                         # 95% of requests under 800ms
+    maxErrorRate: 0.05               # <5% errors allowed
+  defaults:
+    headers:
+      Accept: "application/xml"      # optional, adjust if JSON or other format
+
+scenarios:
+  - name: "GET /api/endpoint baseline check"
+    flow:
+      - get:
+          url: "/api/endpoint"
+          expect:
+            - statusCode: 200

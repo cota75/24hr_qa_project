@@ -1,0 +1,5403 @@
+{
+  "collection": {
+    "_": {
+      "postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+      "exporter_id": "3768658"
+    },
+    "item": [
+      {
+        "id": "139625d7-c672-4809-91d6-eec040440aba",
+        "name": "Login",
+        "request": {
+          "url": {
+            "path": [
+              "login",
+              ":username",
+              ":password"
+            ],
+            "host": [
+              "{{baseURL}}"
+            ],
+            "query": [],
+            "variable": [
+              {
+                "type": "any",
+                "value": "testX",
+                "key": "username"
+              },
+              {
+                "type": "any",
+                "value": "test",
+                "key": "password"
+              }
+            ]
+          },
+          "method": "GET",
+          "auth": {
+            "type": "noauth",
+            "noauth": []
+          }
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+              "type": "text/javascript",
+              "packages": {},
+              "exec": [
+                "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                "pm.test(\"Extract and save customer id from XML\", function () {",
+                "    const body = pm.response.text();",
+                "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                "",
+                "    // Convert XML to JSON-like object",
+                "    var jsonObject = xml2Json(body);",
+                "",
+                "    // Navigate to customer id safely",
+                "    var accountId = null;",
+                "    try {",
+                "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                "        if (typeof idNode === \"string\") {",
+                "            accountId = idNode;",
+                "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                "        }",
+                "    } catch (e) { /* noop */ }",
+                "",
+                "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                "",
+                "    // Save to environment",
+                "    pm.environment.set(\"myAccountId\", accountId);",
+                "",
+                "    // Log for visibility",
+                "    console.log(\"Extracted accountId:\", accountId);",
+                "});"
+              ],
+              "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+            }
+          }
+        ]
+      },
+      {
+        "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+        "name": "Account Overview",
+        "request": {
+          "url": {
+            "path": [
+              "customers",
+              "{{myAccountId}}",
+              "accounts"
+            ],
+            "host": [
+              "{{baseURL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "GET"
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "prerequest",
+            "script": {
+              "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+              "type": "text/javascript",
+              "packages": {},
+              "exec": [
+                ""
+              ],
+              "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+            }
+          },
+          {
+            "listen": "test",
+            "script": {
+              "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+              "type": "text/javascript",
+              "packages": {},
+              "exec": [
+                "pm.test(\"Status code is 2xx\", function () {",
+                "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                "});"
+              ],
+              "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+            }
+          }
+        ]
+      },
+      {
+        "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+        "name": "Create New Account",
+        "request": {
+          "url": {
+            "path": [
+              "createAccount"
+            ],
+            "host": [
+              "{{baseURL}}"
+            ],
+            "query": [
+              {
+                "key": "customerId",
+                "value": "{{myAccountId}}"
+              },
+              {
+                "key": "newAccountType",
+                "value": "0"
+              },
+              {
+                "key": "fromAccountId",
+                "value": "{{myCustomerId}}"
+              }
+            ],
+            "variable": []
+          },
+          "method": "POST"
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 2xx\", function () {",
+                "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                "});",
+                "",
+                "pm.test(\"Response body is not empty\", function () {",
+                "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                "});",
+                "",
+                "// Extract new account id from XML if present",
+                "try {",
+                "    var jsonObject = xml2Json(pm.response.text());",
+                "    var newAccountId = null;",
+                "    if (jsonObject && jsonObject.accountId) {",
+                "        newAccountId = jsonObject.accountId;",
+                "    }",
+                "    if (newAccountId) {",
+                "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                "    }",
+                "} catch (e) { /* ignore */ }"
+              ],
+              "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+            }
+          }
+        ]
+      },
+      {
+        "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+        "name": "Transfer",
+        "request": {
+          "url": {
+            "path": [
+              "createAccount"
+            ],
+            "host": [
+              "{{baseURL}}"
+            ],
+            "query": [
+              {
+                "key": "customerId",
+                "value": "{{myAccountId}}"
+              },
+              {
+                "key": "newAccountType",
+                "value": "0"
+              },
+              {
+                "key": "fromAccountId",
+                "value": "{{myCustomerId}}"
+              }
+            ],
+            "variable": []
+          },
+          "method": "POST"
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 2xx\", function () {",
+                "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                "});",
+                "",
+                "pm.test(\"Response body is not empty\", function () {",
+                "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                "});",
+                "",
+                "// Extract transfer confirmation from XML if present",
+                "try {",
+                "    var jsonObject = xml2Json(pm.response.text());",
+                "    var transferId = null;",
+                "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                "        transferId = jsonObject.transfer.id;",
+                "    }",
+                "    if (transferId) {",
+                "        pm.collectionVariables.set(\"transferId\", transferId);",
+                "    }",
+                "} catch (e) { /* ignore */ }"
+              ],
+              "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+            }
+          }
+        ]
+      },
+      {
+        "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+        "name": "Get Transactions",
+        "request": {
+          "url": {
+            "path": [
+              "accounts",
+              "{{newAccountId}}",
+              "transactions"
+            ],
+            "host": [
+              "{{baseURL}}"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "method": "GET"
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 2xx\", function () {",
+                "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                "});",
+                "",
+                "pm.test(\"Response body is not empty\", function () {",
+                "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                "});",
+                "",
+                "// Extract transactions from XML if present",
+                "try {",
+                "    var jsonObject = xml2Json(pm.response.text());",
+                "    var transactions = null;",
+                "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                "        transactions = jsonObject.transactions.transaction;",
+                "    }",
+                "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                "} catch (e) { /* ignore */ }"
+              ],
+              "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+            }
+          }
+        ]
+      },
+      {
+        "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+        "name": "Request Loan",
+        "request": {
+          "url": {
+            "path": [
+              "requestLoan"
+            ],
+            "host": [
+              "{{baseURL}}"
+            ],
+            "query": [
+              {
+                "key": "customerId",
+                "value": "{{myAccountId}}"
+              },
+              {
+                "key": "amount",
+                "value": "111"
+              },
+              {
+                "key": "downPayment",
+                "value": "1"
+              },
+              {
+                "key": "fromAccountId",
+                "value": "{{newAccountId}}"
+              }
+            ],
+            "variable": []
+          },
+          "method": "POST"
+        },
+        "response": [],
+        "event": [
+          {
+            "listen": "test",
+            "script": {
+              "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+              "type": "text/javascript",
+              "exec": [
+                "pm.test(\"Status code is 2xx\", function () {",
+                "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                "});",
+                "",
+                "pm.test(\"Response body is not empty\", function () {",
+                "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                "});",
+                "",
+                "// Extract loan response from XML if present",
+                "try {",
+                "    var jsonObject = xml2Json(pm.response.text());",
+                "    var loanId = null;",
+                "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                "        loanId = jsonObject.loanResponse.id;",
+                "    }",
+                "    if (loanId) {",
+                "        pm.collectionVariables.set(\"loanId\", loanId);",
+                "    }",
+                "} catch (e) { /* ignore */ }"
+              ],
+              "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+            }
+          }
+        ]
+      }
+    ],
+    "event": [
+      {
+        "listen": "prerequest",
+        "script": {
+          "id": "416bc867-c2b5-4ae6-9cd6-241956658fd0",
+          "type": "text/javascript",
+          "packages": {},
+          "exec": [
+            ""
+          ],
+          "_lastExecutionId": "e63638b6-2538-4ca3-b245-f6be2500fc47"
+        }
+      },
+      {
+        "listen": "test",
+        "script": {
+          "id": "3b0aaf95-84c9-4d94-9d36-f25a2edfa707",
+          "type": "text/javascript",
+          "packages": {},
+          "exec": [
+            ""
+          ],
+          "_lastExecutionId": "5448a855-71ae-4593-a4b7-14592e1022e6"
+        }
+      }
+    ],
+    "variable": [
+      {
+        "type": "any",
+        "value": "",
+        "key": "baseURL"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "myAccountId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "myCustomerId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "newAccountId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "transfer_amount"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "transfer_fromAccountId"
+      },
+      {
+        "type": "any",
+        "value": "",
+        "key": "transfer_toAccountId"
+      }
+    ],
+    "info": {
+      "_postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+      "name": "Parabank",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    }
+  },
+  "environment": {
+    "_": {
+      "postman_variable_scope": "environment",
+      "postman_exported_at": "2025-11-01T22:28:52.497Z",
+      "postman_exported_using": "Postman/11.69.7"
+    },
+    "id": "3ea275eb-c363-4219-9f1a-d3ff12a09eb9",
+    "name": "Parabank",
+    "values": [
+      {
+        "type": "any",
+        "value": "https://parabank.parasoft.com/parabank/services/bank",
+        "key": "baseURL"
+      }
+    ]
+  },
+  "globals": {
+    "id": "b66cab35-641e-4c7b-a147-bef9d01c6a90",
+    "values": []
+  },
+  "run": {
+    "stats": {
+      "iterations": {
+        "total": 1,
+        "pending": 0,
+        "failed": 0
+      },
+      "items": {
+        "total": 6,
+        "pending": 0,
+        "failed": 0
+      },
+      "scripts": {
+        "total": 19,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequests": {
+        "total": 6,
+        "pending": 0,
+        "failed": 0
+      },
+      "requests": {
+        "total": 6,
+        "pending": 0,
+        "failed": 0
+      },
+      "tests": {
+        "total": 6,
+        "pending": 0,
+        "failed": 0
+      },
+      "assertions": {
+        "total": 10,
+        "pending": 0,
+        "failed": 6
+      },
+      "testScripts": {
+        "total": 12,
+        "pending": 0,
+        "failed": 0
+      },
+      "prerequestScripts": {
+        "total": 7,
+        "pending": 0,
+        "failed": 0
+      }
+    },
+    "timings": {
+      "responseAverage": 118.16666666666667,
+      "responseMin": 44,
+      "responseMax": 462,
+      "responseSd": 153.80227205372773,
+      "dnsAverage": 0,
+      "dnsMin": 0,
+      "dnsMax": 0,
+      "dnsSd": 0,
+      "firstByteAverage": 0,
+      "firstByteMin": 0,
+      "firstByteMax": 0,
+      "firstByteSd": 0,
+      "started": 1762036799000,
+      "completed": 1762036800277
+    },
+    "executions": [
+      {
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 6,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "030845e9-bb11-41ee-b654-33ba9083a100",
+          "httpRequestId": "1046cf9f-e820-4e55-aa03-a0a32a8bb63a"
+        },
+        "item": {
+          "id": "139625d7-c672-4809-91d6-eec040440aba",
+          "name": "Login",
+          "request": {
+            "url": {
+              "path": [
+                "login",
+                ":username",
+                ":password"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "testX",
+                  "key": "username"
+                },
+                {
+                  "type": "any",
+                  "value": "test",
+                  "key": "password"
+                }
+              ]
+            },
+            "method": "GET",
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                  "pm.test(\"Extract and save customer id from XML\", function () {",
+                  "    const body = pm.response.text();",
+                  "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "",
+                  "    // Convert XML to JSON-like object",
+                  "    var jsonObject = xml2Json(body);",
+                  "",
+                  "    // Navigate to customer id safely",
+                  "    var accountId = null;",
+                  "    try {",
+                  "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                  "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                  "        if (typeof idNode === \"string\") {",
+                  "            accountId = idNode;",
+                  "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                  "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                  "        }",
+                  "    } catch (e) { /* noop */ }",
+                  "",
+                  "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                  "",
+                  "    // Save to environment",
+                  "    pm.environment.set(\"myAccountId\", accountId);",
+                  "",
+                  "    // Log for visibility",
+                  "    console.log(\"Extracted accountId:\", accountId);",
+                  "});"
+                ],
+                "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "parabank",
+              "services",
+              "bank",
+              "login",
+              "testX",
+              "test"
+            ],
+            "host": [
+              "parabank",
+              "parasoft",
+              "com"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "1305325f-3371-4582-b701-a6068f1c8a02",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "parabank.parasoft.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET",
+          "auth": {
+            "type": "noauth",
+            "noauth": []
+          }
+        },
+        "response": {
+          "id": "fde23b0c-6449-46f8-88d4-9c538bd7f799",
+          "status": "Bad Request",
+          "code": 400,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Sat, 01 Nov 2025 22:39:59 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/plain;charset=UTF-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "32"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "cloudflare"
+            },
+            {
+              "key": "cf-cache-status",
+              "value": "DYNAMIC"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "CF-RAY",
+              "value": "997ee42cee8d15f1-SJC"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              73,
+              110,
+              118,
+              97,
+              108,
+              105,
+              100,
+              32,
+              117,
+              115,
+              101,
+              114,
+              110,
+              97,
+              109,
+              101,
+              32,
+              97,
+              110,
+              100,
+              47,
+              111,
+              114,
+              32,
+              112,
+              97,
+              115,
+              115,
+              119,
+              111,
+              114,
+              100
+            ]
+          },
+          "cookie": [],
+          "responseTime": 462,
+          "responseSize": 32
+        },
+        "id": "139625d7-c672-4809-91d6-eec040440aba",
+        "assertions": [
+          {
+            "assertion": "Extract and save customer id from XML",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "Extract and save customer id from XML",
+              "message": "customer.id should be present: expected null to be a string",
+              "stack": "AssertionError: customer.id should be present: expected null to be a string\n   at Object.eval sandbox-script.js:1:1)"
+            }
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "368d3dfd-1d87-41fc-a6f1-b09f7d03d593",
+          "length": 6,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "99d38c64-5410-4a73-a4df-fceaecb18e9f"
+        },
+        "item": {
+          "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+          "name": "Account Overview",
+          "request": {
+            "url": {
+              "path": [
+                "customers",
+                "{{myAccountId}}",
+                "accounts"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});"
+                ],
+                "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "parabank",
+              "services",
+              "bank",
+              "customers",
+              "",
+              "accounts"
+            ],
+            "host": [
+              "parabank",
+              "parasoft",
+              "com"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "1a552409-ae07-4657-b9e0-e99e6a158d1b",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "parabank.parasoft.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "e26ee452-8b24-4ba1-bf8b-8e0594dc0c1b",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Sat, 01 Nov 2025 22:39:59 GMT"
+            },
+            {
+              "key": "Content-Length",
+              "value": "0"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "cloudflare"
+            },
+            {
+              "key": "cf-cache-status",
+              "value": "DYNAMIC"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "CF-RAY",
+              "value": "997ee42faa7215f1-SJC"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": []
+          },
+          "cookie": [],
+          "responseTime": 55,
+          "responseSize": 0
+        },
+        "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+        "assertions": [
+          {
+            "assertion": "Status code is 2xx",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "Status code is 2xx",
+              "message": "expected 404 to be within 200..299",
+              "stack": "AssertionError: expected 404 to be within 200..299\n   at Object.eval sandbox-script.js:1:2)"
+            }
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "6cc9d557-187b-4b32-8875-0fffb2659b00",
+          "length": 6,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "9621f38f-4994-46a4-a480-d94deb447a79"
+        },
+        "item": {
+          "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+          "name": "Create New Account",
+          "request": {
+            "url": {
+              "path": [
+                "createAccount"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{myAccountId}}"
+                },
+                {
+                  "key": "newAccountType",
+                  "value": "0"
+                },
+                {
+                  "key": "fromAccountId",
+                  "value": "{{myCustomerId}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "POST"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract new account id from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var newAccountId = null;",
+                  "    if (jsonObject && jsonObject.accountId) {",
+                  "        newAccountId = jsonObject.accountId;",
+                  "    }",
+                  "    if (newAccountId) {",
+                  "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                  "    }",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "parabank",
+              "services",
+              "bank",
+              "createAccount"
+            ],
+            "host": [
+              "parabank",
+              "parasoft",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "customerId",
+                "value": ""
+              },
+              {
+                "key": "newAccountType",
+                "value": "0"
+              },
+              {
+                "key": "fromAccountId",
+                "value": ""
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "840a333b-5a25-4fa6-bf7b-e305af1b6eee",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "parabank.parasoft.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "0",
+              "system": true
+            }
+          ],
+          "method": "POST"
+        },
+        "response": {
+          "id": "1602ee73-5916-42da-8487-a9e51fadec1d",
+          "status": "Bad Request",
+          "code": 400,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Sat, 01 Nov 2025 22:40:00 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/plain;charset=UTF-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "58"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "cloudflare"
+            },
+            {
+              "key": "cf-cache-status",
+              "value": "DYNAMIC"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "CF-RAY",
+              "value": "997ee4304b5615f1-SJC"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              67,
+              111,
+              117,
+              108,
+              100,
+              32,
+              110,
+              111,
+              116,
+              32,
+              99,
+              114,
+              101,
+              97,
+              116,
+              101,
+              32,
+              110,
+              101,
+              119,
+              32,
+              97,
+              99,
+              99,
+              111,
+              117,
+              110,
+              116,
+              32,
+              102,
+              111,
+              114,
+              32,
+              99,
+              117,
+              115,
+              116,
+              111,
+              109,
+              101,
+              114,
+              32,
+              48,
+              32,
+              102,
+              114,
+              111,
+              109,
+              32,
+              97,
+              99,
+              99,
+              111,
+              117,
+              110,
+              116,
+              32,
+              48
+            ]
+          },
+          "cookie": [],
+          "responseTime": 49,
+          "responseSize": 58
+        },
+        "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+        "assertions": [
+          {
+            "assertion": "Status code is 2xx",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "Status code is 2xx",
+              "message": "expected 400 to be within 200..299",
+              "stack": "AssertionError: expected 400 to be within 200..299\n   at Object.eval sandbox-script.js:1:3)"
+            }
+          },
+          {
+            "assertion": "Response body is not empty",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "be634333-d6dd-4dfa-a0d0-f4433642aced",
+          "length": 6,
+          "cycles": 1,
+          "position": 3,
+          "iteration": 0,
+          "httpRequestId": "0305dccb-8d27-4e2d-8b78-bcdef302cc2d"
+        },
+        "item": {
+          "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+          "name": "Transfer",
+          "request": {
+            "url": {
+              "path": [
+                "createAccount"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{myAccountId}}"
+                },
+                {
+                  "key": "newAccountType",
+                  "value": "0"
+                },
+                {
+                  "key": "fromAccountId",
+                  "value": "{{myCustomerId}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "POST"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract transfer confirmation from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var transferId = null;",
+                  "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                  "        transferId = jsonObject.transfer.id;",
+                  "    }",
+                  "    if (transferId) {",
+                  "        pm.collectionVariables.set(\"transferId\", transferId);",
+                  "    }",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "parabank",
+              "services",
+              "bank",
+              "createAccount"
+            ],
+            "host": [
+              "parabank",
+              "parasoft",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "customerId",
+                "value": ""
+              },
+              {
+                "key": "newAccountType",
+                "value": "0"
+              },
+              {
+                "key": "fromAccountId",
+                "value": ""
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "724ebe47-c94d-4b58-84c6-fb6c14e4c7b1",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "parabank.parasoft.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "0",
+              "system": true
+            }
+          ],
+          "method": "POST"
+        },
+        "response": {
+          "id": "6d7eb7dd-fecc-4e27-958e-a61f3ddd01f5",
+          "status": "Bad Request",
+          "code": 400,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Sat, 01 Nov 2025 22:40:00 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "text/plain;charset=UTF-8"
+            },
+            {
+              "key": "Content-Length",
+              "value": "58"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "cloudflare"
+            },
+            {
+              "key": "cf-cache-status",
+              "value": "DYNAMIC"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "CF-RAY",
+              "value": "997ee430cc1315f1-SJC"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              67,
+              111,
+              117,
+              108,
+              100,
+              32,
+              110,
+              111,
+              116,
+              32,
+              99,
+              114,
+              101,
+              97,
+              116,
+              101,
+              32,
+              110,
+              101,
+              119,
+              32,
+              97,
+              99,
+              99,
+              111,
+              117,
+              110,
+              116,
+              32,
+              102,
+              111,
+              114,
+              32,
+              99,
+              117,
+              115,
+              116,
+              111,
+              109,
+              101,
+              114,
+              32,
+              48,
+              32,
+              102,
+              114,
+              111,
+              109,
+              32,
+              97,
+              99,
+              99,
+              111,
+              117,
+              110,
+              116,
+              32,
+              48
+            ]
+          },
+          "cookie": [],
+          "responseTime": 51,
+          "responseSize": 58
+        },
+        "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+        "assertions": [
+          {
+            "assertion": "Status code is 2xx",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "Status code is 2xx",
+              "message": "expected 400 to be within 200..299",
+              "stack": "AssertionError: expected 400 to be within 200..299\n   at Object.eval sandbox-script.js:1:4)"
+            }
+          },
+          {
+            "assertion": "Response body is not empty",
+            "skipped": false
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "cd70fc2e-6953-487a-a5d6-5fc7be5c2da0",
+          "length": 6,
+          "cycles": 1,
+          "position": 4,
+          "iteration": 0,
+          "httpRequestId": "76d8eb1f-1961-4378-83ec-bbf244959b09"
+        },
+        "item": {
+          "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+          "name": "Get Transactions",
+          "request": {
+            "url": {
+              "path": [
+                "accounts",
+                "{{newAccountId}}",
+                "transactions"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract transactions from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var transactions = null;",
+                  "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                  "        transactions = jsonObject.transactions.transaction;",
+                  "    }",
+                  "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "parabank",
+              "services",
+              "bank",
+              "accounts",
+              "",
+              "transactions"
+            ],
+            "host": [
+              "parabank",
+              "parasoft",
+              "com"
+            ],
+            "query": [],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "dee519fa-82ac-4bdf-80ea-9c73e6c6a5f9",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "parabank.parasoft.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            }
+          ],
+          "method": "GET"
+        },
+        "response": {
+          "id": "b04f567d-a0e2-4f28-bd2e-b8d3b2d1cb65",
+          "status": "Not Found",
+          "code": 404,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Sat, 01 Nov 2025 22:40:00 GMT"
+            },
+            {
+              "key": "Content-Length",
+              "value": "0"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "cloudflare"
+            },
+            {
+              "key": "cf-cache-status",
+              "value": "DYNAMIC"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "CF-RAY",
+              "value": "997ee4315cdb15f1-SJC"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": []
+          },
+          "cookie": [],
+          "responseTime": 44,
+          "responseSize": 0
+        },
+        "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+        "assertions": [
+          {
+            "assertion": "Status code is 2xx",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 0,
+              "test": "Status code is 2xx",
+              "message": "expected 404 to be within 200..299",
+              "stack": "AssertionError: expected 404 to be within 200..299\n   at Object.eval sandbox-script.js:1:5)"
+            }
+          },
+          {
+            "assertion": "Response body is not empty",
+            "skipped": false,
+            "error": {
+              "name": "AssertionError",
+              "index": 1,
+              "test": "Response body is not empty",
+              "message": "Response body should not be empty: expected '' not to be empty",
+              "stack": "AssertionError: Response body should not be empty: expected '' not to be empty\n   at Object.eval sandbox-script.js:2:5)"
+            }
+          }
+        ]
+      },
+      {
+        "cursor": {
+          "ref": "9d03a2c6-4a3d-40b2-88f9-393a4bb3823a",
+          "length": 6,
+          "cycles": 1,
+          "position": 5,
+          "iteration": 0,
+          "httpRequestId": "6b290e41-a603-48c4-bf0b-db56435039f4"
+        },
+        "item": {
+          "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+          "name": "Request Loan",
+          "request": {
+            "url": {
+              "path": [
+                "requestLoan"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{myAccountId}}"
+                },
+                {
+                  "key": "amount",
+                  "value": "111"
+                },
+                {
+                  "key": "downPayment",
+                  "value": "1"
+                },
+                {
+                  "key": "fromAccountId",
+                  "value": "{{newAccountId}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "POST"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract loan response from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var loanId = null;",
+                  "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                  "        loanId = jsonObject.loanResponse.id;",
+                  "    }",
+                  "    if (loanId) {",
+                  "        pm.collectionVariables.set(\"loanId\", loanId);",
+                  "    }",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+              }
+            }
+          ]
+        },
+        "request": {
+          "url": {
+            "protocol": "https",
+            "path": [
+              "parabank",
+              "services",
+              "bank",
+              "requestLoan"
+            ],
+            "host": [
+              "parabank",
+              "parasoft",
+              "com"
+            ],
+            "query": [
+              {
+                "key": "customerId",
+                "value": ""
+              },
+              {
+                "key": "amount",
+                "value": "111"
+              },
+              {
+                "key": "downPayment",
+                "value": "1"
+              },
+              {
+                "key": "fromAccountId",
+                "value": ""
+              }
+            ],
+            "variable": []
+          },
+          "header": [
+            {
+              "key": "User-Agent",
+              "value": "PostmanRuntime/7.39.1",
+              "system": true
+            },
+            {
+              "key": "Accept",
+              "value": "*/*",
+              "system": true
+            },
+            {
+              "key": "Cache-Control",
+              "value": "no-cache",
+              "system": true
+            },
+            {
+              "key": "Postman-Token",
+              "value": "4be0f4c9-a5a3-42bb-9ab8-e9a79470c847",
+              "system": true
+            },
+            {
+              "key": "Host",
+              "value": "parabank.parasoft.com",
+              "system": true
+            },
+            {
+              "key": "Accept-Encoding",
+              "value": "gzip, deflate, br",
+              "system": true
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive",
+              "system": true
+            },
+            {
+              "key": "Content-Length",
+              "value": "0",
+              "system": true
+            }
+          ],
+          "method": "POST"
+        },
+        "response": {
+          "id": "d6ed5d6b-8a8c-43ef-930b-e36210fa0c44",
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Date",
+              "value": "Sat, 01 Nov 2025 22:40:00 GMT"
+            },
+            {
+              "key": "Content-Type",
+              "value": "application/xml"
+            },
+            {
+              "key": "Transfer-Encoding",
+              "value": "chunked"
+            },
+            {
+              "key": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "key": "Server",
+              "value": "cloudflare"
+            },
+            {
+              "key": "cf-cache-status",
+              "value": "DYNAMIC"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Content-Encoding",
+              "value": "br"
+            },
+            {
+              "key": "CF-RAY",
+              "value": "997ee431cd6715f1-SJC"
+            }
+          ],
+          "stream": {
+            "type": "Buffer",
+            "data": [
+              60,
+              63,
+              120,
+              109,
+              108,
+              32,
+              118,
+              101,
+              114,
+              115,
+              105,
+              111,
+              110,
+              61,
+              34,
+              49,
+              46,
+              48,
+              34,
+              32,
+              101,
+              110,
+              99,
+              111,
+              100,
+              105,
+              110,
+              103,
+              61,
+              34,
+              85,
+              84,
+              70,
+              45,
+              56,
+              34,
+              32,
+              115,
+              116,
+              97,
+              110,
+              100,
+              97,
+              108,
+              111,
+              110,
+              101,
+              61,
+              34,
+              121,
+              101,
+              115,
+              34,
+              63,
+              62,
+              60,
+              110,
+              115,
+              50,
+              58,
+              108,
+              111,
+              97,
+              110,
+              82,
+              101,
+              115,
+              112,
+              111,
+              110,
+              115,
+              101,
+              32,
+              120,
+              109,
+              108,
+              110,
+              115,
+              58,
+              110,
+              115,
+              50,
+              61,
+              34,
+              104,
+              116,
+              116,
+              112,
+              58,
+              47,
+              47,
+              115,
+              101,
+              114,
+              118,
+              105,
+              99,
+              101,
+              46,
+              112,
+              97,
+              114,
+              97,
+              98,
+              97,
+              110,
+              107,
+              46,
+              112,
+              97,
+              114,
+              97,
+              115,
+              111,
+              102,
+              116,
+              46,
+              99,
+              111,
+              109,
+              47,
+              34,
+              62,
+              60,
+              114,
+              101,
+              115,
+              112,
+              111,
+              110,
+              115,
+              101,
+              68,
+              97,
+              116,
+              101,
+              62,
+              50,
+              48,
+              50,
+              53,
+              45,
+              49,
+              49,
+              45,
+              48,
+              49,
+              84,
+              50,
+              50,
+              58,
+              52,
+              48,
+              58,
+              48,
+              48,
+              46,
+              51,
+              48,
+              48,
+              90,
+              60,
+              47,
+              114,
+              101,
+              115,
+              112,
+              111,
+              110,
+              115,
+              101,
+              68,
+              97,
+              116,
+              101,
+              62,
+              60,
+              108,
+              111,
+              97,
+              110,
+              80,
+              114,
+              111,
+              118,
+              105,
+              100,
+              101,
+              114,
+              78,
+              97,
+              109,
+              101,
+              62,
+              80,
+              97,
+              114,
+              97,
+              66,
+              97,
+              110,
+              107,
+              60,
+              47,
+              108,
+              111,
+              97,
+              110,
+              80,
+              114,
+              111,
+              118,
+              105,
+              100,
+              101,
+              114,
+              78,
+              97,
+              109,
+              101,
+              62,
+              60,
+              97,
+              112,
+              112,
+              114,
+              111,
+              118,
+              101,
+              100,
+              62,
+              102,
+              97,
+              108,
+              115,
+              101,
+              60,
+              47,
+              97,
+              112,
+              112,
+              114,
+              111,
+              118,
+              101,
+              100,
+              62,
+              60,
+              109,
+              101,
+              115,
+              115,
+              97,
+              103,
+              101,
+              62,
+              101,
+              114,
+              114,
+              111,
+              114,
+              46,
+              105,
+              110,
+              115,
+              117,
+              102,
+              102,
+              105,
+              99,
+              105,
+              101,
+              110,
+              116,
+              46,
+              102,
+              117,
+              110,
+              100,
+              115,
+              46,
+              102,
+              111,
+              114,
+              46,
+              100,
+              111,
+              119,
+              110,
+              46,
+              112,
+              97,
+              121,
+              109,
+              101,
+              110,
+              116,
+              60,
+              47,
+              109,
+              101,
+              115,
+              115,
+              97,
+              103,
+              101,
+              62,
+              60,
+              47,
+              110,
+              115,
+              50,
+              58,
+              108,
+              111,
+              97,
+              110,
+              82,
+              101,
+              115,
+              112,
+              111,
+              110,
+              115,
+              101,
+              62
+            ]
+          },
+          "cookie": [],
+          "responseTime": 48,
+          "responseSize": 326
+        },
+        "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+        "assertions": [
+          {
+            "assertion": "Status code is 2xx",
+            "skipped": false
+          },
+          {
+            "assertion": "Response body is not empty",
+            "skipped": false
+          }
+        ]
+      }
+    ],
+    "transfers": {
+      "responseTotal": 474
+    },
+    "failures": [
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 0,
+          "test": "Extract and save customer id from XML",
+          "message": "customer.id should be present: expected null to be a string",
+          "stack": "AssertionError: customer.id should be present: expected null to be a string\n   at Object.eval sandbox-script.js:1:1)",
+          "checksum": "ba2e5acfd13c9bf32240e14e8dda7e05",
+          "id": "54be2290-f6a4-4197-84f7-bce1a878f09d",
+          "timestamp": 1762036799659,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 1,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 1,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:0 in test-script",
+        "source": {
+          "id": "139625d7-c672-4809-91d6-eec040440aba",
+          "name": "Login",
+          "request": {
+            "url": {
+              "path": [
+                "login",
+                ":username",
+                ":password"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "type": "any",
+                  "value": "testX",
+                  "key": "username"
+                },
+                {
+                  "type": "any",
+                  "value": "test",
+                  "key": "password"
+                }
+              ]
+            },
+            "method": "GET",
+            "auth": {
+              "type": "noauth",
+              "noauth": []
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                  "pm.test(\"Extract and save customer id from XML\", function () {",
+                  "    const body = pm.response.text();",
+                  "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "",
+                  "    // Convert XML to JSON-like object",
+                  "    var jsonObject = xml2Json(body);",
+                  "",
+                  "    // Navigate to customer id safely",
+                  "    var accountId = null;",
+                  "    try {",
+                  "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                  "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                  "        if (typeof idNode === \"string\") {",
+                  "            accountId = idNode;",
+                  "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                  "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                  "        }",
+                  "    } catch (e) { /* noop */ }",
+                  "",
+                  "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                  "",
+                  "    // Save to environment",
+                  "    pm.environment.set(\"myAccountId\", accountId);",
+                  "",
+                  "    // Log for visibility",
+                  "    console.log(\"Extracted accountId:\", accountId);",
+                  "});"
+                ],
+                "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "_": {
+            "postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "exporter_id": "3768658"
+          },
+          "item": [
+            {
+              "id": "139625d7-c672-4809-91d6-eec040440aba",
+              "name": "Login",
+              "request": {
+                "url": {
+                  "path": [
+                    "login",
+                    ":username",
+                    ":password"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "type": "any",
+                      "value": "testX",
+                      "key": "username"
+                    },
+                    {
+                      "type": "any",
+                      "value": "test",
+                      "key": "password"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                      "pm.test(\"Extract and save customer id from XML\", function () {",
+                      "    const body = pm.response.text();",
+                      "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Convert XML to JSON-like object",
+                      "    var jsonObject = xml2Json(body);",
+                      "",
+                      "    // Navigate to customer id safely",
+                      "    var accountId = null;",
+                      "    try {",
+                      "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                      "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                      "        if (typeof idNode === \"string\") {",
+                      "            accountId = idNode;",
+                      "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                      "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                      "        }",
+                      "    } catch (e) { /* noop */ }",
+                      "",
+                      "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Save to environment",
+                      "    pm.environment.set(\"myAccountId\", accountId);",
+                      "",
+                      "    // Log for visibility",
+                      "    console.log(\"Extracted accountId:\", accountId);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+              "name": "Account Overview",
+              "request": {
+                "url": {
+                  "path": [
+                    "customers",
+                    "{{myAccountId}}",
+                    "accounts"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      ""
+                    ],
+                    "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+              "name": "Create New Account",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract new account id from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var newAccountId = null;",
+                      "    if (jsonObject && jsonObject.accountId) {",
+                      "        newAccountId = jsonObject.accountId;",
+                      "    }",
+                      "    if (newAccountId) {",
+                      "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+              "name": "Transfer",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transfer confirmation from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transferId = null;",
+                      "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                      "        transferId = jsonObject.transfer.id;",
+                      "    }",
+                      "    if (transferId) {",
+                      "        pm.collectionVariables.set(\"transferId\", transferId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+              "name": "Get Transactions",
+              "request": {
+                "url": {
+                  "path": [
+                    "accounts",
+                    "{{newAccountId}}",
+                    "transactions"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transactions from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transactions = null;",
+                      "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                      "        transactions = jsonObject.transactions.transaction;",
+                      "    }",
+                      "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+              "name": "Request Loan",
+              "request": {
+                "url": {
+                  "path": [
+                    "requestLoan"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "amount",
+                      "value": "111"
+                    },
+                    {
+                      "key": "downPayment",
+                      "value": "1"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{newAccountId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract loan response from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var loanId = null;",
+                      "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                      "        loanId = jsonObject.loanResponse.id;",
+                      "    }",
+                      "    if (loanId) {",
+                      "        pm.collectionVariables.set(\"loanId\", loanId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+                  }
+                }
+              ]
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "416bc867-c2b5-4ae6-9cd6-241956658fd0",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "e63638b6-2538-4ca3-b245-f6be2500fc47"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3b0aaf95-84c9-4d94-9d36-f25a2edfa707",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "5448a855-71ae-4593-a4b7-14592e1022e6"
+              }
+            }
+          ],
+          "variable": [
+            {
+              "type": "any",
+              "value": "",
+              "key": "baseURL"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myCustomerId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "newAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_amount"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_fromAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_toAccountId"
+            }
+          ],
+          "info": {
+            "_postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "name": "Parabank",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+          }
+        },
+        "cursor": {
+          "position": 0,
+          "iteration": 0,
+          "length": 6,
+          "cycles": 1,
+          "empty": false,
+          "eof": false,
+          "bof": true,
+          "cr": false,
+          "ref": "030845e9-bb11-41ee-b654-33ba9083a100",
+          "httpRequestId": "1046cf9f-e820-4e55-aa03-a0a32a8bb63a",
+          "scriptId": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+          "execution": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+        }
+      },
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 0,
+          "test": "Status code is 2xx",
+          "message": "expected 404 to be within 200..299",
+          "stack": "AssertionError: expected 404 to be within 200..299\n   at Object.eval sandbox-script.js:1:2)",
+          "checksum": "2443dd54c51197d8dd6572bc990c2470",
+          "id": "99efb61c-4deb-41d9-a24f-3e53571c1098",
+          "timestamp": 1762036799938,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 1,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 2,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:0 in test-script",
+        "source": {
+          "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+          "name": "Account Overview",
+          "request": {
+            "url": {
+              "path": [
+                "customers",
+                "{{myAccountId}}",
+                "accounts"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});"
+                ],
+                "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "_": {
+            "postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "exporter_id": "3768658"
+          },
+          "item": [
+            {
+              "id": "139625d7-c672-4809-91d6-eec040440aba",
+              "name": "Login",
+              "request": {
+                "url": {
+                  "path": [
+                    "login",
+                    ":username",
+                    ":password"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "type": "any",
+                      "value": "testX",
+                      "key": "username"
+                    },
+                    {
+                      "type": "any",
+                      "value": "test",
+                      "key": "password"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                      "pm.test(\"Extract and save customer id from XML\", function () {",
+                      "    const body = pm.response.text();",
+                      "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Convert XML to JSON-like object",
+                      "    var jsonObject = xml2Json(body);",
+                      "",
+                      "    // Navigate to customer id safely",
+                      "    var accountId = null;",
+                      "    try {",
+                      "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                      "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                      "        if (typeof idNode === \"string\") {",
+                      "            accountId = idNode;",
+                      "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                      "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                      "        }",
+                      "    } catch (e) { /* noop */ }",
+                      "",
+                      "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Save to environment",
+                      "    pm.environment.set(\"myAccountId\", accountId);",
+                      "",
+                      "    // Log for visibility",
+                      "    console.log(\"Extracted accountId:\", accountId);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+              "name": "Account Overview",
+              "request": {
+                "url": {
+                  "path": [
+                    "customers",
+                    "{{myAccountId}}",
+                    "accounts"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      ""
+                    ],
+                    "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+              "name": "Create New Account",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract new account id from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var newAccountId = null;",
+                      "    if (jsonObject && jsonObject.accountId) {",
+                      "        newAccountId = jsonObject.accountId;",
+                      "    }",
+                      "    if (newAccountId) {",
+                      "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+              "name": "Transfer",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transfer confirmation from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transferId = null;",
+                      "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                      "        transferId = jsonObject.transfer.id;",
+                      "    }",
+                      "    if (transferId) {",
+                      "        pm.collectionVariables.set(\"transferId\", transferId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+              "name": "Get Transactions",
+              "request": {
+                "url": {
+                  "path": [
+                    "accounts",
+                    "{{newAccountId}}",
+                    "transactions"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transactions from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transactions = null;",
+                      "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                      "        transactions = jsonObject.transactions.transaction;",
+                      "    }",
+                      "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+              "name": "Request Loan",
+              "request": {
+                "url": {
+                  "path": [
+                    "requestLoan"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "amount",
+                      "value": "111"
+                    },
+                    {
+                      "key": "downPayment",
+                      "value": "1"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{newAccountId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract loan response from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var loanId = null;",
+                      "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                      "        loanId = jsonObject.loanResponse.id;",
+                      "    }",
+                      "    if (loanId) {",
+                      "        pm.collectionVariables.set(\"loanId\", loanId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+                  }
+                }
+              ]
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "416bc867-c2b5-4ae6-9cd6-241956658fd0",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "e63638b6-2538-4ca3-b245-f6be2500fc47"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3b0aaf95-84c9-4d94-9d36-f25a2edfa707",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "5448a855-71ae-4593-a4b7-14592e1022e6"
+              }
+            }
+          ],
+          "variable": [
+            {
+              "type": "any",
+              "value": "",
+              "key": "baseURL"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myCustomerId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "newAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_amount"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_fromAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_toAccountId"
+            }
+          ],
+          "info": {
+            "_postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "name": "Parabank",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+          }
+        },
+        "cursor": {
+          "ref": "368d3dfd-1d87-41fc-a6f1-b09f7d03d593",
+          "length": 6,
+          "cycles": 1,
+          "position": 1,
+          "iteration": 0,
+          "httpRequestId": "99d38c64-5410-4a73-a4df-fceaecb18e9f",
+          "scriptId": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+          "execution": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+        }
+      },
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 0,
+          "test": "Status code is 2xx",
+          "message": "expected 400 to be within 200..299",
+          "stack": "AssertionError: expected 400 to be within 200..299\n   at Object.eval sandbox-script.js:1:3)",
+          "checksum": "8a4a713d654148d7d4a4f13d28dc78d0",
+          "id": "d48b21dd-1196-4e6c-bec8-b033fed15288",
+          "timestamp": 1762036800027,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 1,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 3,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:0 in test-script",
+        "source": {
+          "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+          "name": "Create New Account",
+          "request": {
+            "url": {
+              "path": [
+                "createAccount"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{myAccountId}}"
+                },
+                {
+                  "key": "newAccountType",
+                  "value": "0"
+                },
+                {
+                  "key": "fromAccountId",
+                  "value": "{{myCustomerId}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "POST"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract new account id from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var newAccountId = null;",
+                  "    if (jsonObject && jsonObject.accountId) {",
+                  "        newAccountId = jsonObject.accountId;",
+                  "    }",
+                  "    if (newAccountId) {",
+                  "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                  "    }",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "_": {
+            "postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "exporter_id": "3768658"
+          },
+          "item": [
+            {
+              "id": "139625d7-c672-4809-91d6-eec040440aba",
+              "name": "Login",
+              "request": {
+                "url": {
+                  "path": [
+                    "login",
+                    ":username",
+                    ":password"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "type": "any",
+                      "value": "testX",
+                      "key": "username"
+                    },
+                    {
+                      "type": "any",
+                      "value": "test",
+                      "key": "password"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                      "pm.test(\"Extract and save customer id from XML\", function () {",
+                      "    const body = pm.response.text();",
+                      "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Convert XML to JSON-like object",
+                      "    var jsonObject = xml2Json(body);",
+                      "",
+                      "    // Navigate to customer id safely",
+                      "    var accountId = null;",
+                      "    try {",
+                      "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                      "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                      "        if (typeof idNode === \"string\") {",
+                      "            accountId = idNode;",
+                      "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                      "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                      "        }",
+                      "    } catch (e) { /* noop */ }",
+                      "",
+                      "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Save to environment",
+                      "    pm.environment.set(\"myAccountId\", accountId);",
+                      "",
+                      "    // Log for visibility",
+                      "    console.log(\"Extracted accountId:\", accountId);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+              "name": "Account Overview",
+              "request": {
+                "url": {
+                  "path": [
+                    "customers",
+                    "{{myAccountId}}",
+                    "accounts"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      ""
+                    ],
+                    "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+              "name": "Create New Account",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract new account id from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var newAccountId = null;",
+                      "    if (jsonObject && jsonObject.accountId) {",
+                      "        newAccountId = jsonObject.accountId;",
+                      "    }",
+                      "    if (newAccountId) {",
+                      "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+              "name": "Transfer",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transfer confirmation from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transferId = null;",
+                      "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                      "        transferId = jsonObject.transfer.id;",
+                      "    }",
+                      "    if (transferId) {",
+                      "        pm.collectionVariables.set(\"transferId\", transferId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+              "name": "Get Transactions",
+              "request": {
+                "url": {
+                  "path": [
+                    "accounts",
+                    "{{newAccountId}}",
+                    "transactions"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transactions from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transactions = null;",
+                      "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                      "        transactions = jsonObject.transactions.transaction;",
+                      "    }",
+                      "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+              "name": "Request Loan",
+              "request": {
+                "url": {
+                  "path": [
+                    "requestLoan"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "amount",
+                      "value": "111"
+                    },
+                    {
+                      "key": "downPayment",
+                      "value": "1"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{newAccountId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract loan response from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var loanId = null;",
+                      "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                      "        loanId = jsonObject.loanResponse.id;",
+                      "    }",
+                      "    if (loanId) {",
+                      "        pm.collectionVariables.set(\"loanId\", loanId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+                  }
+                }
+              ]
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "416bc867-c2b5-4ae6-9cd6-241956658fd0",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "e63638b6-2538-4ca3-b245-f6be2500fc47"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3b0aaf95-84c9-4d94-9d36-f25a2edfa707",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "5448a855-71ae-4593-a4b7-14592e1022e6"
+              }
+            }
+          ],
+          "variable": [
+            {
+              "type": "any",
+              "value": "",
+              "key": "baseURL"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myCustomerId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "newAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_amount"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_fromAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_toAccountId"
+            }
+          ],
+          "info": {
+            "_postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "name": "Parabank",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+          }
+        },
+        "cursor": {
+          "ref": "6cc9d557-187b-4b32-8875-0fffb2659b00",
+          "length": 6,
+          "cycles": 1,
+          "position": 2,
+          "iteration": 0,
+          "httpRequestId": "9621f38f-4994-46a4-a480-d94deb447a79",
+          "scriptId": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+          "execution": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+        }
+      },
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 0,
+          "test": "Status code is 2xx",
+          "message": "expected 400 to be within 200..299",
+          "stack": "AssertionError: expected 400 to be within 200..299\n   at Object.eval sandbox-script.js:1:4)",
+          "checksum": "37625f7b73593a517f927f09f5cb4ac2",
+          "id": "a7836dc7-be35-4330-9f8a-abeff0861d7a",
+          "timestamp": 1762036800115,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 1,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 4,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:0 in test-script",
+        "source": {
+          "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+          "name": "Transfer",
+          "request": {
+            "url": {
+              "path": [
+                "createAccount"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{myAccountId}}"
+                },
+                {
+                  "key": "newAccountType",
+                  "value": "0"
+                },
+                {
+                  "key": "fromAccountId",
+                  "value": "{{myCustomerId}}"
+                }
+              ],
+              "variable": []
+            },
+            "method": "POST"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract transfer confirmation from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var transferId = null;",
+                  "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                  "        transferId = jsonObject.transfer.id;",
+                  "    }",
+                  "    if (transferId) {",
+                  "        pm.collectionVariables.set(\"transferId\", transferId);",
+                  "    }",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "_": {
+            "postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "exporter_id": "3768658"
+          },
+          "item": [
+            {
+              "id": "139625d7-c672-4809-91d6-eec040440aba",
+              "name": "Login",
+              "request": {
+                "url": {
+                  "path": [
+                    "login",
+                    ":username",
+                    ":password"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "type": "any",
+                      "value": "testX",
+                      "key": "username"
+                    },
+                    {
+                      "type": "any",
+                      "value": "test",
+                      "key": "password"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                      "pm.test(\"Extract and save customer id from XML\", function () {",
+                      "    const body = pm.response.text();",
+                      "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Convert XML to JSON-like object",
+                      "    var jsonObject = xml2Json(body);",
+                      "",
+                      "    // Navigate to customer id safely",
+                      "    var accountId = null;",
+                      "    try {",
+                      "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                      "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                      "        if (typeof idNode === \"string\") {",
+                      "            accountId = idNode;",
+                      "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                      "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                      "        }",
+                      "    } catch (e) { /* noop */ }",
+                      "",
+                      "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Save to environment",
+                      "    pm.environment.set(\"myAccountId\", accountId);",
+                      "",
+                      "    // Log for visibility",
+                      "    console.log(\"Extracted accountId:\", accountId);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+              "name": "Account Overview",
+              "request": {
+                "url": {
+                  "path": [
+                    "customers",
+                    "{{myAccountId}}",
+                    "accounts"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      ""
+                    ],
+                    "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+              "name": "Create New Account",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract new account id from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var newAccountId = null;",
+                      "    if (jsonObject && jsonObject.accountId) {",
+                      "        newAccountId = jsonObject.accountId;",
+                      "    }",
+                      "    if (newAccountId) {",
+                      "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+              "name": "Transfer",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transfer confirmation from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transferId = null;",
+                      "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                      "        transferId = jsonObject.transfer.id;",
+                      "    }",
+                      "    if (transferId) {",
+                      "        pm.collectionVariables.set(\"transferId\", transferId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+              "name": "Get Transactions",
+              "request": {
+                "url": {
+                  "path": [
+                    "accounts",
+                    "{{newAccountId}}",
+                    "transactions"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transactions from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transactions = null;",
+                      "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                      "        transactions = jsonObject.transactions.transaction;",
+                      "    }",
+                      "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+              "name": "Request Loan",
+              "request": {
+                "url": {
+                  "path": [
+                    "requestLoan"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "amount",
+                      "value": "111"
+                    },
+                    {
+                      "key": "downPayment",
+                      "value": "1"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{newAccountId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract loan response from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var loanId = null;",
+                      "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                      "        loanId = jsonObject.loanResponse.id;",
+                      "    }",
+                      "    if (loanId) {",
+                      "        pm.collectionVariables.set(\"loanId\", loanId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+                  }
+                }
+              ]
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "416bc867-c2b5-4ae6-9cd6-241956658fd0",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "e63638b6-2538-4ca3-b245-f6be2500fc47"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3b0aaf95-84c9-4d94-9d36-f25a2edfa707",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "5448a855-71ae-4593-a4b7-14592e1022e6"
+              }
+            }
+          ],
+          "variable": [
+            {
+              "type": "any",
+              "value": "",
+              "key": "baseURL"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myCustomerId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "newAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_amount"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_fromAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_toAccountId"
+            }
+          ],
+          "info": {
+            "_postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "name": "Parabank",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+          }
+        },
+        "cursor": {
+          "ref": "be634333-d6dd-4dfa-a0d0-f4433642aced",
+          "length": 6,
+          "cycles": 1,
+          "position": 3,
+          "iteration": 0,
+          "httpRequestId": "0305dccb-8d27-4e2d-8b78-bcdef302cc2d",
+          "scriptId": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+          "execution": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+        }
+      },
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 0,
+          "test": "Status code is 2xx",
+          "message": "expected 404 to be within 200..299",
+          "stack": "AssertionError: expected 404 to be within 200..299\n   at Object.eval sandbox-script.js:1:5)",
+          "checksum": "edb0ccbb112b63520657b54d5f491e4a",
+          "id": "3f46e4d1-664e-40fa-817b-3887a06ddd94",
+          "timestamp": 1762036800188,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 1,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 5,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:0 in test-script",
+        "source": {
+          "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+          "name": "Get Transactions",
+          "request": {
+            "url": {
+              "path": [
+                "accounts",
+                "{{newAccountId}}",
+                "transactions"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract transactions from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var transactions = null;",
+                  "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                  "        transactions = jsonObject.transactions.transaction;",
+                  "    }",
+                  "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "_": {
+            "postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "exporter_id": "3768658"
+          },
+          "item": [
+            {
+              "id": "139625d7-c672-4809-91d6-eec040440aba",
+              "name": "Login",
+              "request": {
+                "url": {
+                  "path": [
+                    "login",
+                    ":username",
+                    ":password"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "type": "any",
+                      "value": "testX",
+                      "key": "username"
+                    },
+                    {
+                      "type": "any",
+                      "value": "test",
+                      "key": "password"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                      "pm.test(\"Extract and save customer id from XML\", function () {",
+                      "    const body = pm.response.text();",
+                      "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Convert XML to JSON-like object",
+                      "    var jsonObject = xml2Json(body);",
+                      "",
+                      "    // Navigate to customer id safely",
+                      "    var accountId = null;",
+                      "    try {",
+                      "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                      "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                      "        if (typeof idNode === \"string\") {",
+                      "            accountId = idNode;",
+                      "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                      "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                      "        }",
+                      "    } catch (e) { /* noop */ }",
+                      "",
+                      "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Save to environment",
+                      "    pm.environment.set(\"myAccountId\", accountId);",
+                      "",
+                      "    // Log for visibility",
+                      "    console.log(\"Extracted accountId:\", accountId);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+              "name": "Account Overview",
+              "request": {
+                "url": {
+                  "path": [
+                    "customers",
+                    "{{myAccountId}}",
+                    "accounts"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      ""
+                    ],
+                    "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+              "name": "Create New Account",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract new account id from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var newAccountId = null;",
+                      "    if (jsonObject && jsonObject.accountId) {",
+                      "        newAccountId = jsonObject.accountId;",
+                      "    }",
+                      "    if (newAccountId) {",
+                      "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+              "name": "Transfer",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transfer confirmation from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transferId = null;",
+                      "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                      "        transferId = jsonObject.transfer.id;",
+                      "    }",
+                      "    if (transferId) {",
+                      "        pm.collectionVariables.set(\"transferId\", transferId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+              "name": "Get Transactions",
+              "request": {
+                "url": {
+                  "path": [
+                    "accounts",
+                    "{{newAccountId}}",
+                    "transactions"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transactions from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transactions = null;",
+                      "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                      "        transactions = jsonObject.transactions.transaction;",
+                      "    }",
+                      "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+              "name": "Request Loan",
+              "request": {
+                "url": {
+                  "path": [
+                    "requestLoan"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "amount",
+                      "value": "111"
+                    },
+                    {
+                      "key": "downPayment",
+                      "value": "1"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{newAccountId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract loan response from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var loanId = null;",
+                      "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                      "        loanId = jsonObject.loanResponse.id;",
+                      "    }",
+                      "    if (loanId) {",
+                      "        pm.collectionVariables.set(\"loanId\", loanId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+                  }
+                }
+              ]
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "416bc867-c2b5-4ae6-9cd6-241956658fd0",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "e63638b6-2538-4ca3-b245-f6be2500fc47"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3b0aaf95-84c9-4d94-9d36-f25a2edfa707",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "5448a855-71ae-4593-a4b7-14592e1022e6"
+              }
+            }
+          ],
+          "variable": [
+            {
+              "type": "any",
+              "value": "",
+              "key": "baseURL"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myCustomerId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "newAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_amount"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_fromAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_toAccountId"
+            }
+          ],
+          "info": {
+            "_postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "name": "Parabank",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+          }
+        },
+        "cursor": {
+          "ref": "cd70fc2e-6953-487a-a5d6-5fc7be5c2da0",
+          "length": 6,
+          "cycles": 1,
+          "position": 4,
+          "iteration": 0,
+          "httpRequestId": "76d8eb1f-1961-4378-83ec-bbf244959b09",
+          "scriptId": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+          "execution": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+        }
+      },
+      {
+        "error": {
+          "name": "AssertionError",
+          "index": 1,
+          "test": "Response body is not empty",
+          "message": "Response body should not be empty: expected '' not to be empty",
+          "stack": "AssertionError: Response body should not be empty: expected '' not to be empty\n   at Object.eval sandbox-script.js:2:5)",
+          "checksum": "e4cd492c28f646102ca3f20352210707",
+          "id": "67b89836-181f-48ab-9ca2-b93429f5b006",
+          "timestamp": 1762036800189,
+          "stacktrace": [
+            {
+              "fileName": "sandbox-script.js",
+              "lineNumber": 2,
+              "functionName": "Object.eval",
+              "typeName": "Object",
+              "methodName": "eval",
+              "columnNumber": 5,
+              "native": false
+            }
+          ]
+        },
+        "at": "assertion:1 in test-script",
+        "source": {
+          "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+          "name": "Get Transactions",
+          "request": {
+            "url": {
+              "path": [
+                "accounts",
+                "{{newAccountId}}",
+                "transactions"
+              ],
+              "host": [
+                "{{baseURL}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "method": "GET"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 2xx\", function () {",
+                  "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                  "});",
+                  "",
+                  "pm.test(\"Response body is not empty\", function () {",
+                  "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "// Extract transactions from XML if present",
+                  "try {",
+                  "    var jsonObject = xml2Json(pm.response.text());",
+                  "    var transactions = null;",
+                  "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                  "        transactions = jsonObject.transactions.transaction;",
+                  "    }",
+                  "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                  "} catch (e) { /* ignore */ }"
+                ],
+                "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+              }
+            }
+          ]
+        },
+        "parent": {
+          "_": {
+            "postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "exporter_id": "3768658"
+          },
+          "item": [
+            {
+              "id": "139625d7-c672-4809-91d6-eec040440aba",
+              "name": "Login",
+              "request": {
+                "url": {
+                  "path": [
+                    "login",
+                    ":username",
+                    ":password"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "type": "any",
+                      "value": "testX",
+                      "key": "username"
+                    },
+                    {
+                      "type": "any",
+                      "value": "test",
+                      "key": "password"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "auth": {
+                  "type": "noauth",
+                  "noauth": []
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "09ffbba7-69ac-40ee-9b3a-5f2af8bf3021",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "// Parse XML response and extract customer id, then save to environment as 'accountId'",
+                      "pm.test(\"Extract and save customer id from XML\", function () {",
+                      "    const body = pm.response.text();",
+                      "    pm.expect(body, \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Convert XML to JSON-like object",
+                      "    var jsonObject = xml2Json(body);",
+                      "",
+                      "    // Navigate to customer id safely",
+                      "    var accountId = null;",
+                      "    try {",
+                      "        // xml2Json converts nodes into objects; id could be object or string depending on parser",
+                      "        const idNode = jsonObject && jsonObject.customer && jsonObject.customer.id;",
+                      "        if (typeof idNode === \"string\") {",
+                      "            accountId = idNode;",
+                      "        } else if (idNode && typeof idNode === \"object\" && typeof idNode[\"#text\"] === \"string\") {",
+                      "            accountId = idNode[\"#text\"]; // fallback if parser wraps text",
+                      "        }",
+                      "    } catch (e) { /* noop */ }",
+                      "",
+                      "    pm.expect(accountId, \"customer.id should be present\").to.be.a(\"string\").and.not.empty;",
+                      "",
+                      "    // Save to environment",
+                      "    pm.environment.set(\"myAccountId\", accountId);",
+                      "",
+                      "    // Log for visibility",
+                      "    console.log(\"Extracted accountId:\", accountId);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "6da8224c-0ad3-4cc9-baaa-bacca0a530f9"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "920e42c2-ec88-42bf-b0ab-74199cd523ad",
+              "name": "Account Overview",
+              "request": {
+                "url": {
+                  "path": [
+                    "customers",
+                    "{{myAccountId}}",
+                    "accounts"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "f180ca7a-ea77-4fd8-9857-a1e663647e0f",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      ""
+                    ],
+                    "_lastExecutionId": "14460305-627e-45cf-aa78-9e3c3d27695f"
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ffc08451-409f-4a73-8ece-3ad6e1db4acf",
+                    "type": "text/javascript",
+                    "packages": {},
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});"
+                    ],
+                    "_lastExecutionId": "37fa3d9f-7cd2-415b-8734-c6a18985bdbf"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "dbf94253-af8e-424f-b04a-e02270d69bab",
+              "name": "Create New Account",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "fb2d30c4-e5ae-4572-aa93-0c052a8218b4",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract new account id from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var newAccountId = null;",
+                      "    if (jsonObject && jsonObject.accountId) {",
+                      "        newAccountId = jsonObject.accountId;",
+                      "    }",
+                      "    if (newAccountId) {",
+                      "        pm.collectionVariables.set(\"newAccountId\", newAccountId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "7b1bd05a-aab3-4228-8ae8-1efcdfecb855"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "1d014a35-20de-4a8e-a680-a0a234d1c8b1",
+              "name": "Transfer",
+              "request": {
+                "url": {
+                  "path": [
+                    "createAccount"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "newAccountType",
+                      "value": "0"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{myCustomerId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "2ec6ccd3-e23c-44a6-82ba-3d5b9bc0bce2",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transfer confirmation from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transferId = null;",
+                      "    if (jsonObject && jsonObject.transfer && jsonObject.transfer.id) {",
+                      "        transferId = jsonObject.transfer.id;",
+                      "    }",
+                      "    if (transferId) {",
+                      "        pm.collectionVariables.set(\"transferId\", transferId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "2ad091e1-9f8a-4239-8937-3e4ed4994bdb"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "a05f18ae-ce0f-4bd0-9508-5b324dec59ea",
+              "name": "Get Transactions",
+              "request": {
+                "url": {
+                  "path": [
+                    "accounts",
+                    "{{newAccountId}}",
+                    "transactions"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "method": "GET"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract transactions from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var transactions = null;",
+                      "    if (jsonObject && jsonObject.transactions && jsonObject.transactions.transaction) {",
+                      "        transactions = jsonObject.transactions.transaction;",
+                      "    }",
+                      "    pm.expect(transactions, \"Transactions should be present\").to.exist;",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "270e65b5-f1d2-4822-9179-ab1c7129cc25",
+              "name": "Request Loan",
+              "request": {
+                "url": {
+                  "path": [
+                    "requestLoan"
+                  ],
+                  "host": [
+                    "{{baseURL}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "customerId",
+                      "value": "{{myAccountId}}"
+                    },
+                    {
+                      "key": "amount",
+                      "value": "111"
+                    },
+                    {
+                      "key": "downPayment",
+                      "value": "1"
+                    },
+                    {
+                      "key": "fromAccountId",
+                      "value": "{{newAccountId}}"
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "POST"
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5a2c4cea-0dfd-4ca1-ac19-6267e441792a",
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status code is 2xx\", function () {",
+                      "    pm.expect(pm.response.code).to.be.within(200, 299);",
+                      "});",
+                      "",
+                      "pm.test(\"Response body is not empty\", function () {",
+                      "    pm.expect(pm.response.text(), \"Response body should not be empty\").to.be.a(\"string\").and.not.empty;",
+                      "});",
+                      "",
+                      "// Extract loan response from XML if present",
+                      "try {",
+                      "    var jsonObject = xml2Json(pm.response.text());",
+                      "    var loanId = null;",
+                      "    if (jsonObject && jsonObject.loanResponse && jsonObject.loanResponse.id) {",
+                      "        loanId = jsonObject.loanResponse.id;",
+                      "    }",
+                      "    if (loanId) {",
+                      "        pm.collectionVariables.set(\"loanId\", loanId);",
+                      "    }",
+                      "} catch (e) { /* ignore */ }"
+                    ],
+                    "_lastExecutionId": "18c53976-8898-4d3a-8f92-d3cc2e9c3937"
+                  }
+                }
+              ]
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "416bc867-c2b5-4ae6-9cd6-241956658fd0",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "e63638b6-2538-4ca3-b245-f6be2500fc47"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3b0aaf95-84c9-4d94-9d36-f25a2edfa707",
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  ""
+                ],
+                "_lastExecutionId": "5448a855-71ae-4593-a4b7-14592e1022e6"
+              }
+            }
+          ],
+          "variable": [
+            {
+              "type": "any",
+              "value": "",
+              "key": "baseURL"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "myCustomerId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "newAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_amount"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_fromAccountId"
+            },
+            {
+              "type": "any",
+              "value": "",
+              "key": "transfer_toAccountId"
+            }
+          ],
+          "info": {
+            "_postman_id": "b961ec68-c28b-4594-9441-77bf5149101e",
+            "name": "Parabank",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+          }
+        },
+        "cursor": {
+          "ref": "cd70fc2e-6953-487a-a5d6-5fc7be5c2da0",
+          "length": 6,
+          "cycles": 1,
+          "position": 4,
+          "iteration": 0,
+          "httpRequestId": "76d8eb1f-1961-4378-83ec-bbf244959b09",
+          "scriptId": "5ec9e1c5-8f55-4e1d-bd0a-40124f3dd89f",
+          "execution": "ac4ded24-5612-40c9-bd02-8ace8e859f6a"
+        }
+      }
+    ],
+    "error": null
+  }
+}
